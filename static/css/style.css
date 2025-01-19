@@ -1,0 +1,90 @@
+/* Apply the Google Font */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* Chatbot Container (floating pop-up) */
+#chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    max-width: 100%;
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 9999; /* Ensure it stays on top of other content */
+}
+
+/* Chatbox Area */
+#chatbox {
+    display: flex;
+    flex-direction: column;
+    height: 350px;
+    border-top: 1px solid #ccc;
+}
+
+/* Chat Header (Title Area) */
+#chat-header {
+    background-color: #006747; /* Ivy Tech Green */
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+#chat-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #8DC63F;
+
+}
+
+#chat-header p {
+    margin: 5px 0;
+    font-size: 14px;
+    font-weight: lighter;
+}
+
+/* Chat Output (conversation area) */
+#chat-output {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #f9f9f9;
+    color: #333;
+}
+
+/* Chat Input Area */
+#chat-input {
+    display: flex;
+    padding: 10px;
+    background: #f0f0f0;
+    border-top: 1px solid #ccc;
+}
+
+#user-input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+#send-btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #006747; /* Ivy Tech Green */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#send-btn:hover {
+    background-color: #004d36; /* Darker Ivy Tech Green */
+}
