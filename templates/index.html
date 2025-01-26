@@ -32,33 +32,39 @@
         });
 
         document.getElementById("send-btn").addEventListener("click", function() {
-            var userInput = document.getElementById("user-input").value;
-            if (userInput) {
-                // Show the user's input in the chat output
-                document.getElementById("chat-output").innerHTML += "<p><strong>You:</strong> " + userInput + "</p>";
+            const userInput = document.getElementById("user-input").value;
 
-                // Clear the input field
-                document.getElementById("user-input").value = "";
-
-                // Send the input to the server for a response
-                fetch("/get_response", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ "user_input": userInput })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Display the bot's response
-                    document.getElementById("chat-output").innerHTML += "<p><strong>Bot:</strong> " + data.response + "</p>";
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            // Prevent empty input
+            if (userInput.trim() === "") {
+                alert("Please enter a message.");
+                return;
             }
+
+            // Show the user's input in the chat output
+            const chatOutput = document.getElementById("chat-output");
+            chatOutput.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+
+            // Clear the input field
+            document.getElementById("user-input").value = "";
+
+            // Send the input to the server for a response
+            fetch("/get_response", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ "user_input": userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the bot's response as HTML (with links)
+                chatOutput.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+                chatOutput.scrollTop = chatOutput.scrollHeight; // Auto-scroll to the latest message
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
         });
     </script>
 
 </body>
-</html>

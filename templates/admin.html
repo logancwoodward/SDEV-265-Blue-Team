@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <h1>Admin Panel</h1>
+        <form id="add-response-form" method="POST" action="/add_response">
+            <label for="keyword">Keyword:</label>
+            <input type="text" id="keyword" name="keyword" required>
+            
+            <label for="response">Response:</label>
+            <input type="text" id="response" name="response" required>
+            
+            <label for="link">Link (optional):</label>
+            <input type="url" id="link" name="link">
+            
+            <button type="submit">Add Response</button>
+        </form>
+    </div>
+</body>
+</html>

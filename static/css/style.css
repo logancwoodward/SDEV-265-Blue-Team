@@ -88,3 +88,103 @@ body {
 #send-btn:hover {
     background-color: #004d36; /* Darker Ivy Tech Green */
 }
+/* Admin Container */
+.admin-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin Header */
+.admin-container h1 {
+    text-align: center;
+    font-size: 24px;
+    color: #006747;
+    margin-bottom: 20px;
+}
+
+/* Admin Form */
+.admin-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Form Labels */
+.admin-container label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Form Inputs */
+.admin-container input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+/* Submit Button */
+.admin-container button {
+    padding: 10px 15px;
+    font-size: 16px;
+    color: #fff;
+    background-color: #006747;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.admin-container button:hover {
+    background-color: #004d36;
+}
+
+/* Success Message Styles */
+.success-message {
+    max-width: 600px; /* Center the message */
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #e6f4ea; /* Light green background */
+    border: 1px solid #006747; /* Ivy Tech green border */
+    border-radius: 8px;
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.success-message p {
+    font-size: 18px;
+    font-weight: bold;
+    color: #006747; /* Ivy Tech green text */
+    margin: 0 0 10px;
+}
+
+.success-message a {
+    font-size: 16px;
+    color: #004d36; /* Darker Ivy Tech green */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.success-message a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+
+/* Responsive Design for Smaller Screens */
+@media (max-width: 768px) {
+    .admin-container {
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .admin-container h1 {
+        font-size: 20px;
+    }
+}

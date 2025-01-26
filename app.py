@@ -1,33 +1,80 @@
-import json
 from flask import Flask, render_template, request, jsonify
+import sqlite3
 
 app = Flask(__name__)
 
-# Function to load responses from the JSON file
-def load_responses():
-    with open('data/responses.json') as f:
-        return json.load(f)
+# Path to the database file
+DB_PATH = "database/chatbot.db"
 
-responses = load_responses()  # Load the responses from the JSON file
+# Function to get a response from the database
+def get_response_from_db(keyword):
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    cursor.execute("SELECT response, link FROM responses WHERE keyword LIKE ?", ('%' + keyword + '%',))
+    result = cursor.fetchone()
+    connection.close()
+    return result
 
-# Route to render the main page with the chatbot
+# Route to render the chatbot page
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# API route for the chatbot to process the user input
+# Route to handle user inputs and send responses
 @app.route('/get_response', methods=['POST'])
 def get_response():
-    user_input = request.json.get('user_input').lower()  # Convert input to lowercase for easier matching
-    
-    # Check if the user input matches a key in the responses
-    for key, value in responses.items():
-        if key.lower() in user_input:  # Match the user's input to a response
-            return jsonify({'response': value})
+    user_input = request.json.get('user_input')
+    result = get_response_from_db(user_input)
 
-    # If no match is found, return the default response
-    return jsonify({'response': responses.get('default', 'Sorry, I don\'t understand that. Can you ask something else?')})
+    if result:
+        response, link = result
+        if link:
+            response += f' <a href="{link}" target="_blank">Learn more</a>'
+        return jsonify({'response': response})
+    else:
+        return jsonify({'response': "Sorry, I don't understand that. Can you ask something else?"})
+
+
+
+
+# Route to render the admin page
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
+
+# Route to add responses via the admin panel
+@app.route('/add_response', methods=['POST'])
+def add_response():
+    keyword = request.form['keyword']
+    response = request.form['response']
+    link = request.form.get('link')  # Optional field
+
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO responses (keyword, response, link) VALUES (?, ?, ?)", 
+                   (keyword, response, link))
+    connection.commit()
+    connection.close()
+
+    
+    # Full HTML structure for success message
+    return """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Response Added</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body>
+        <div class="success-message">
+            <p>Response added successfully!</p>
+            <a href='/admin'>Go back to Admin Panel</a>
+        </div>
+    </body>
+    </html>
+    """
 
 if __name__ == '__main__':
     app.run(debug=True)
-
