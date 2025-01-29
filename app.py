@@ -26,7 +26,7 @@ def index():
 @app.route('/get_response', methods=['POST'])
 def get_response():
     user_input = request.json.get('user_input')
-
+    keyword_extractor(user_input)
     # parse user_input before querying the .db to extract keywords from the user_input
     # Built-in function to parse user statement to allow them to communicate more naturally
     # keywords = keyword_extractor(keyword)
