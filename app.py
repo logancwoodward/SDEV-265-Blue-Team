@@ -30,6 +30,8 @@ def get_response():
     if len(keywords) > 1:
         for keyword in keywords:
             result = get_response_from_db(keyword)
+    if len(keywords) == 1:
+        result = get_response_from_db(keyword)
     print(result)
 
     if result:
@@ -38,6 +40,8 @@ def get_response():
             response += f' <a href="{link}" target="_blank">Learn more</a>'
         return jsonify({'response': response})
     else:
+        if len(keywords) == 0:
+            return jsonify({'response': 'Oops! It appears that you didn\'t enter anything. Be sure to type out your request before hitting enter.'})
         return jsonify({'response': "Sorry, I don't understand that. Can you ask something else?"})
 
 
