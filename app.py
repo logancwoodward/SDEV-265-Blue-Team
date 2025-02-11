@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify
-from tools.web_scraper import extract_keywords
+from tools.keyword_extractor import extract_keywords
 import sqlite3
 
 
