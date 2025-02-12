@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
+    <a href="/logout" class="logout-btn">Logout</a>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="admin-container">
         <h1>Admin Panel</h1>
+
+        <!-- Search Bar for Filtering Responses -->
+        <input type="text" id="search-bar" placeholder="Search responses..." onkeyup="filterResponses()">
+
         <form id="add-response-form" method="POST" action="/add_response">
             <label for="keyword">Keyword:</label>
             <input type="text" id="keyword" name="keyword" required>
@@ -21,6 +26,17 @@
             
             <button type="submit">Add Response</button>
         </form>
+
+        <!-- List of responses -->
+        <div id="responses-list">
+            <!-- Responses will be added dynamically -->
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="pagination-controls"></div>
     </div>
+
+    <!-- Link External JavaScript File -->
+    <script src="{{ url_for('static', filename='js/admin_script.js') }}"></script>
 </body>
 </html>

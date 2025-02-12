@@ -1,90 +1,94 @@
-from flask import Flask, render_template, request, jsonify
-from tools.keyword_extractor import extract_keywords
-import sqlite3
-
+from flask import Flask, render_template, request, jsonify, redirect, session
+from database.database_manager import DatabaseManager, ResponseManager, AdminManager
+import os
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "fallback_secret_key")  # Uses env variable for Render, fallback locally
 
-# Path to the database file
-DB_PATH = "database/chatbot.db"
+# Initialize database and managers
+db = DatabaseManager()
+response_manager = ResponseManager(db)
+admin_manager = AdminManager(db)
 
-# Function to get a response from the database
-def get_response_from_db(keyword):
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    cursor.execute("SELECT response, link FROM responses WHERE keyword LIKE ?", ('%' + keyword + '%',))
-    result = cursor.fetchone()
-    connection.close()
-    return result
-
-# Route to render the chatbot page
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    """Renders the chatbot UI."""
+    return render_template("index.html")
 
-# Route to handle user inputs and send responses
-@app.route('/get_response', methods=['POST'])
-def get_response():
-    user_input = request.json.get('user_input')
-    keywords = extract_keywords(user_input)
-    if len(keywords) > 1:
-        for keyword in keywords:
-            result = get_response_from_db(keyword)
-    if len(keywords) == 1:
-        result = get_response_from_db(keyword)
-    print(result)
+### 🔒 ADMIN AUTHENTICATION ROUTES ###
+@app.route("/admin", methods=["GET", "POST"])
+def admin_login():
+    """Handles admin login authentication."""
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
-    if result:
-        response, link = result
-        if link:
-            response += f' <a href="{link}" target="_blank">Learn more</a>'
-        return jsonify({'response': response})
-    else:
-        if len(keywords) == 0:
-            return jsonify({'response': 'Oops! It appears that you didn\'t enter anything. Be sure to type out your request before hitting enter.'})
-        return jsonify({'response': "Sorry, I don't understand that. Can you ask something else?"})
+        if admin_manager.verify_admin(username, password):
+            session["admin"] = username  # Store admin session
+            return redirect("/admin_dashboard")
+        else:
+            return "Invalid credentials", 401
 
+    return render_template("admin_login.html")  # Login page
 
+@app.route("/admin_dashboard")
+def admin_dashboard():
+    """Admin Panel after login."""
+    if "admin" not in session:
+        return redirect("/admin")
+    return render_template("admin.html", admin=session["admin"])
 
+@app.route("/logout")
+def logout():
+    """Logs out the admin."""
+    session.pop("admin", None)
+    return redirect("/admin")
 
-# Route to render the admin page
-@app.route('/admin')
-def admin():
-    return render_template('admin.html')
+### 🔍 ADMIN RESPONSE MANAGEMENT ROUTES ###
+@app.route("/get_responses", methods=["GET"])
+def get_responses():
+    """Fetch responses for admin panel with pagination."""
+    if "admin" not in session:
+        return redirect("/admin")
 
-# Route to add responses via the admin panel
-@app.route('/add_response', methods=['POST'])
+    page = int(request.args.get("page", 1))
+    return jsonify(response_manager.get_responses(page=page))
+
+@app.route("/add_response", methods=["POST"])
 def add_response():
-    keyword = request.form['keyword']
-    response = request.form['response']
-    link = request.form.get('link')  # Optional field
+    """Add a chatbot response (restricted to admin)."""
+    if "admin" not in session:
+        return jsonify({"error": "Unauthorized"}), 403
 
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-    cursor.execute("INSERT INTO responses (keyword, response, link) VALUES (?, ?, ?)", 
-                   (keyword, response, link))
-    connection.commit()
-    connection.close()
+    data = request.json
+    return jsonify(response_manager.add_response(data.get("keyword"), data.get("response"), data.get("link")))
 
-    
-    # Full HTML structure for success message
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Response Added</title>
-        <link rel="stylesheet" href="/static/css/style.css">
-    </head>
-    <body>
-        <div class="success-message">
-            <p>Response added successfully!</p>
-            <a href='/admin'>Go back to Admin Panel</a>
-        </div>
-    </body>
-    </html>
-    """
+@app.route("/edit_response", methods=["POST"])
+def edit_response():
+    """Edit an existing chatbot response (restricted to admin)."""
+    if "admin" not in session:
+        return jsonify({"error": "Unauthorized"}), 403
 
-if __name__ == '__main__':
+    data = request.json
+    return jsonify(response_manager.edit_response(data.get("keyword"), data.get("response"), data.get("link")))
+
+@app.route("/delete_response", methods=["POST"])
+def delete_response():
+    """Delete a chatbot response (restricted to admin)."""
+    if "admin" not in session:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json
+    return jsonify(response_manager.delete_response(data.get("keyword")))
+
+### 💬 CHATBOT RESPONSE ROUTE ###
+@app.route("/get_response", methods=["POST"])
+def get_response():
+    """Handles chatbot response requests."""
+    data = request.json
+    user_message = data.get("message", "").lower()
+    response_text = response_manager.get_response(user_message)
+    return jsonify({"response": response_text})
+
+if __name__ == "__main__":
     app.run(debug=True)

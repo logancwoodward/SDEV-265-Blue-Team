@@ -3,11 +3,11 @@ import sqlite3
 # Path to the database file
 DB_PATH = "database/chatbot.db"
 
-# Create the database and table
 def create_database():
     connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
+    # Create Responses Table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS responses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,28 +16,53 @@ def create_database():
         link TEXT
     )
     ''')
+
+    # Create Messages Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        text TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # Create User Logs Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS user_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id INTEGER NOT NULL,
+        response_id INTEGER,
+        status TEXT CHECK(status IN ('matched', 'unmatched')),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (message_id) REFERENCES messages(id),
+        FOREIGN KEY (response_id) REFERENCES responses(id)
+    )
+    ''')
+
+    # Create Admins Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )
+    ''')
+
+    # Create Admin Logs Table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS admin_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES admins(id)
+    )
+    ''')
+
     connection.commit()
     connection.close()
-    print("Database and table initialized.")
+    print("Database initialized successfully.")
 
-# Insert sample data into the table
-def insert_sample_data():
-    connection = sqlite3.connect(DB_PATH)
-    cursor = connection.cursor()
-
-    sample_data = [
-        ("Ivy Tech", "Ivy Tech is a great community college!", "https://www.ivytech.edu"),
-        ("courses", "Explore the Ivy Tech course catalog.", "https://www.ivytech.edu/courses"),
-        ("admissions", "For admissions, visit the Ivy Tech Admissions page.", "https://www.ivytech.edu/admissions"),
-        ("financial aid", "Learn more about Ivy Tech financial aid.", "https://www.ivytech.edu/financial-aid")
-    ]
-
-    cursor.executemany("INSERT INTO responses (keyword, response, link) VALUES (?, ?, ?)", sample_data)
-    connection.commit()
-    connection.close()
-    print("Sample data inserted.")
-
-# Run these functions only when this script is executed directly
+# Run this file to create the database
 if __name__ == "__main__":
     create_database()
-    insert_sample_data() # Commented out to avoid inserting duplicate data; enable only if resetting the database

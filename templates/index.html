@@ -8,22 +8,44 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
-    <div id="chatbot-container">
+    <!-- Chat Bubble Icon -->
+    <div id="chat-icon" onclick="toggleChatbot()">
+        💬
+    </div>
+    
+    <!-- Chatbot Container -->
+    <div id="chatbot-container" class="hidden">
         <div id="chatbox">
             <div id="chat-header">
-                <h2>Welcome to the Ivy Tech Chatbot</h2>
-                <p>Ask me anything about Ivy Tech Community College!</p>
+                <img src="{{ url_for('static', filename='images/ivy_logo.png') }}" alt="Chatbot Logo" class="chat-logo">
+                <h2>Chatbot</h2>
             </div>
             <div id="chat-output"></div>
             <div id="chat-input">
-                <input type="text" id="user-input" placeholder="Ask me something..." />
+                <input type="text" id="user-input" placeholder="Hi, I am here to answer your Questions." />
                 <button id="send-btn">Send</button>
             </div>
         </div>
     </div>
 
     <script>
+        function toggleChatbot() {
+            const chatbot = document.getElementById("chatbot-container");
+            chatbot.classList.toggle("hidden");
+        }
+
+        // 🔥 Close chatbot when clicking outside
+        document.addEventListener("click", function(event) {
+            const chatbot = document.getElementById("chatbot-container");
+            const chatIcon = document.getElementById("chat-icon");
+
+            // ✅ If clicked outside the chatbot and not on the chat icon, close it
+            if (!chatbot.contains(event.target) && event.target !== chatIcon) {
+                chatbot.classList.add("hidden");
+            }
+        });
+
+        // ✅ Allow pressing "Enter" to send messages
         document.getElementById("user-input").addEventListener("keydown", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -31,40 +53,34 @@
             }
         });
 
+        // ✅ Handle chatbot responses
         document.getElementById("send-btn").addEventListener("click", function() {
-            const userInput = document.getElementById("user-input").value;
-
-            // Prevent empty input
-            if (userInput.trim() === "") {
+            const userInput = document.getElementById("user-input").value.trim();
+            if (userInput === "") {
                 alert("Please enter a message.");
                 return;
             }
 
-            // Show the user's input in the chat output
             const chatOutput = document.getElementById("chat-output");
-            chatOutput.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
-
-            // Clear the input field
+            const timestamp = new Date().toLocaleTimeString();
+            chatOutput.innerHTML += `<p><strong>You:</strong> ${userInput} <span class='timestamp'>(${timestamp})</span></p>`;
             document.getElementById("user-input").value = "";
+            chatOutput.scrollTop = chatOutput.scrollHeight;
 
-            // Send the input to the server for a response
             fetch("/get_response", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ "user_input": userInput })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ "message": userInput })
             })
             .then(response => response.json())
             .then(data => {
-                // Display the bot's response as HTML (with links)
-                chatOutput.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
-                chatOutput.scrollTop = chatOutput.scrollHeight; // Auto-scroll to the latest message
+                chatOutput.innerHTML += `<p><strong>Bot:</strong> ${data.response} <span class='timestamp'>(${timestamp})</span></p>`;
+                chatOutput.scrollTop = chatOutput.scrollHeight;
             })
             .catch(error => {
                 console.error("Error:", error);
             });
         });
     </script>
-
 </body>
+</html>
