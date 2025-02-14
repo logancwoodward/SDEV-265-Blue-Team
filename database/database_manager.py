@@ -56,12 +56,64 @@ class DatabaseManager:
     def close(self):
         """Closes the database connection."""
         self.connection.close()
-
+from rapidfuzz import process, fuzz
 
 class ResponseManager:
     def __init__(self, db):
         """Manage chatbot responses."""
         self.db = db
+
+    def get_response(self, user_message, threshold=75):
+        """Fetches a chatbot response including link if available."""
+        self.db.cursor.execute("SELECT id, keyword, response, link FROM responses")
+        result = self.db.cursor.fetchall()
+
+        if not result:
+            return "I don't understand that yet. Try asking something else!"
+
+        # Build a dictionary mapping keywords (in lowercase) to their response data
+        responses_dict = {}
+        for row in result: #looping through database predetermined responses
+            keyword_lower = row[1].lower()
+            response_text = row[2]
+            link = row[3]
+            response_id = row[0]
+            responses_dict[keyword_lower] = (response_text, link, response_id)
+
+        # convert dictionary into a list
+        choices = []
+        for key in responses_dict.keys():
+            choices.append(key)
+
+        best_match_overall = None
+        best_score_overall = 0
+
+        # first conditional check is for multiple tokens
+        if isinstance(user_message, list):
+            for token in user_message:
+                token_lower = token.lower()
+                match, score, _ = process.extractOne(
+                    token_lower,
+                    choices,
+                    scorer=fuzz.token_set_ratio)
+                if score > best_score_overall:
+                    best_score_overall = score
+                    best_match_overall = match
+        #This conditional check is for one token, meaning it's a string
+        else:
+            best_match_overall, best_score_overall, _ = process.extractOne(
+                user_message.lower(),
+                responses_dict.keys(),
+                scorer=fuzz.token_set_ratio)
+
+            # If a good match is found, return its response (with link if available)
+        if best_match_overall and best_score_overall >= threshold:
+            response_text, link, response_id = responses_dict[best_match_overall]
+            if link:
+                return f"{response_text} <a href='{link}' target='_blank'>Learn more</a>"
+            return response_text
+        else:
+            return "I don't understand that yet. Try asking something else!"
 
     def get_responses(self, page=1, per_page=10):
         """Fetch responses for admin panel with pagination."""
@@ -78,18 +130,6 @@ class ResponseManager:
             "per_page": per_page
         }
 
-    def get_response(self, user_message):
-        """Fetches a chatbot response including link if available."""
-        self.db.cursor.execute("SELECT response, link FROM responses WHERE LOWER(keyword) = LOWER(?)", (user_message,))
-        result = self.db.cursor.fetchone()
-
-        if result:
-            response_text, link = result
-            if link:
-                return f"{response_text} <a href='{link}' target='_blank'>Learn more</a>"
-            return response_text
-        else:
-            return "I don't understand that yet. Try asking something else!"
 
     def add_response(self, keyword, response, link=None):
         """Add a new chatbot response."""

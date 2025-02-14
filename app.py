@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, session
 from database.database_manager import DatabaseManager, ResponseManager, AdminManager
+from tools.keyword_extractor import extract_keywords
 import os
 
 app = Flask(__name__)
@@ -87,7 +88,12 @@ def get_response():
     """Handles chatbot response requests."""
     data = request.json
     user_message = data.get("message", "").lower()
-    response_text = response_manager.get_response(user_message)
+
+    keywords = extract_keywords(user_message)
+
+    for keyword in keywords:
+        print(keyword)
+        response_text = response_manager.get_response(keyword)
     return jsonify({"response": response_text})
 
 if __name__ == "__main__":
