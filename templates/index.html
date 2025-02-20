@@ -8,6 +8,13 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    {% include 'partials/navbar.html' %}
+    <main class="content">
+        <!-- Main Content Goes Here -->
+        <h1>Welcome to Ivy Tech IT Department Chatbot!</h1>
+        <h2>Ask me anything about Ivy Tech's School of Information Technology!</h2>
+        <h3>Click the chat bubble icon in the bottom right to get started!</h3>
+    </main>
     <!-- Chat Bubble Icon -->
     <div id="chat-icon" onclick="toggleChatbot()">
         💬
@@ -27,6 +34,8 @@
             </div>
         </div>
     </div>
+
+    {% include 'partials/footer.html' %}
 
     <script>
         function toggleChatbot() {
@@ -83,4 +92,5 @@
         });
     </script>
 </body>
+
 </html>

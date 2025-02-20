@@ -11,6 +11,7 @@ db = DatabaseManager()
 response_manager = ResponseManager(db)
 admin_manager = AdminManager(db)
 
+
 @app.route("/")
 def index():
     """Renders the chatbot UI."""

@@ -4,7 +4,27 @@ body {
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Make sure body fills the viewport */
 }
+
+.content {
+    flex: 1; /* Pushes the footer to the bottom */
+    padding: 20px;
+    text-align: center;
+}
+
+footer {
+    background-color: #000000; /* Ivy Tech Green */
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: relative;
+    width: 100%;
+    bottom: 0;
+}
+
 #chat-icon {
     position: fixed;
     bottom: 20px;
@@ -236,6 +256,58 @@ body {
     text-decoration: underline; /* Underline on hover */
 }
 
+ /* navbar */
+ .navbar {
+    background-color: #006747; /* Ivy Tech Green */
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-logo img {
+    height: 40px; /* Adjust logo size */
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin-left: 20px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* improved buttons */
+.button {
+    display: inline-block;
+    background-color: #006747; /* Primary Button Color */
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
+}
+    
+.button:hover {
+    background-color: #004d36; /* Darker shade for hover */
+}
 
 /* Responsive Design for phone */
 @media (max-width: 768px) {
@@ -315,4 +387,6 @@ body {
         color: gray;
         margin-left: 5px;
     }
+
+
 }
