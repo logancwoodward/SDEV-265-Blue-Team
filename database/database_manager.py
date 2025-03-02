@@ -57,14 +57,17 @@ class DatabaseManager:
         """Closes the database connection."""
         self.connection.close()
 from rapidfuzz import process, fuzz
+import spacy
+
 
 class ResponseManager:
     def __init__(self, db):
         """Manage chatbot responses."""
         self.db = db
+        self.nlp = spacy.load("en_core_web_sm")  # Load Spacy model
 
     def get_response(self, user_message, threshold=75):
-        """Fetches a chatbot response including link if available."""
+        """Fetches a chatbot response including link if available, using NLP & fuzzy matching."""
         self.db.cursor.execute("SELECT id, keyword, response, link FROM responses")
         result = self.db.cursor.fetchall()
 
@@ -72,48 +75,31 @@ class ResponseManager:
             return "I don't understand that yet. Try asking something else!"
 
         # Build a dictionary mapping keywords (in lowercase) to their response data
-        responses_dict = {}
-        for row in result: #looping through database predetermined responses
-            keyword_lower = row[1].lower()
-            response_text = row[2]
-            link = row[3]
-            response_id = row[0]
-            responses_dict[keyword_lower] = (response_text, link, response_id)
+        responses_dict = {row[1].lower(): (row[2], row[3], row[0]) for row in result}
+        choices = list(responses_dict.keys())
 
-        # convert dictionary into a list
-        choices = []
-        for key in responses_dict.keys():
-            choices.append(key)
+        # Process user message using NLP to extract meaningful words
+        doc = self.nlp(user_message.lower())
+        tokens = [token.lemma_ for token in doc if not token.is_stop and token.is_alpha]
 
-        best_match_overall = None
-        best_score_overall = 0
+        best_match = None
+        best_score = 0
 
-        # first conditional check is for multiple tokens
-        if isinstance(user_message, list):
-            for token in user_message:
-                token_lower = token.lower()
-                match, score, _ = process.extractOne(
-                    token_lower,
-                    choices,
-                    scorer=fuzz.token_set_ratio)
-                if score > best_score_overall:
-                    best_score_overall = score
-                    best_match_overall = match
-        #This conditional check is for one token, meaning it's a string
-        else:
-            best_match_overall, best_score_overall, _ = process.extractOne(
-                user_message.lower(),
-                responses_dict.keys(),
-                scorer=fuzz.token_set_ratio)
+        # Try fuzzy matching on extracted tokens
+        for token in tokens:
+            match, score, _ = process.extractOne(token, choices, scorer=fuzz.token_set_ratio)
+            if score > best_score:
+                best_match, best_score = match, score
 
-            # If a good match is found, return its response (with link if available)
-        if best_match_overall and best_score_overall >= threshold:
-            response_text, link, response_id = responses_dict[best_match_overall]
+        # Return best match if score meets threshold
+        if best_match and best_score >= threshold:
+            response_text, link, response_id = responses_dict[best_match]
             if link:
                 return f"{response_text} <a href='{link}' target='_blank'>Learn more</a>"
             return response_text
         else:
             return "I don't understand that yet. Try asking something else!"
+
 
     def get_responses(self, page=1, per_page=10):
         """Fetch responses for admin panel with pagination."""
@@ -141,12 +127,15 @@ class ResponseManager:
         except sqlite3.IntegrityError:
             return {"error": "Keyword already exists."}
 
-    def edit_response(self, keyword, new_response, new_link=None):
-        """Edit an existing chatbot response."""
-        self.db.cursor.execute("UPDATE responses SET response = ?, link = ? WHERE keyword = ?", 
-                               (new_response, new_link, keyword))
+    def edit_response(self, old_keyword, new_keyword, new_response, new_link=None):
+        """Edit an existing chatbot response, including changing the keyword."""
+        self.db.cursor.execute(
+        "UPDATE responses SET keyword = ?, response = ?, link = ? WHERE keyword = ?", 
+        (new_keyword, new_response, new_link, old_keyword)
+        )
         self.db.connection.commit()
         return {"success": "Response updated successfully."}
+
 
     def delete_response(self, keyword):
         """Delete a chatbot response."""

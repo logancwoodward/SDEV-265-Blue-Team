@@ -62,8 +62,22 @@ def add_response():
     if "admin" not in session:
         return jsonify({"error": "Unauthorized"}), 403
 
-    data = request.json
-    return jsonify(response_manager.add_response(data.get("keyword"), data.get("response"), data.get("link")))
+    try:
+        data = request.json  #  If using JavaScript fetch
+        if not data:
+            data = request.form  #  If using normal form submission
+    except:
+        data = request.form  #  Fallback
+
+    keyword = data.get("keyword")
+    response = data.get("response")
+    link = data.get("link")
+
+    if not keyword or not response:
+        return jsonify({"error": "⚠️ Keyword and Response are required!"})
+
+    return jsonify(response_manager.add_response(keyword, response, link))
+
 
 @app.route("/edit_response", methods=["POST"])
 def edit_response():
