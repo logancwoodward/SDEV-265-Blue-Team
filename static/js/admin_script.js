@@ -1,6 +1,6 @@
 let currentPage = 1;
 
-// Load responses when the admin panel opens
+// ✅ Load Responses with Pagination
 function loadResponses(page = 1) {
     fetch(`/get_responses?page=${page}`)
         .then(response => response.json())
@@ -15,7 +15,7 @@ function loadResponses(page = 1) {
 
             data.responses.forEach(item => {
                 const div = document.createElement("div");
-                div.setAttribute("data-keyword", item.keyword.toLowerCase()); //filtering 
+                div.setAttribute("data-keyword", item.keyword.toLowerCase());
 
                 div.innerHTML = `
                     <p><strong>${item.keyword}</strong>: ${item.response} 
@@ -31,7 +31,7 @@ function loadResponses(page = 1) {
         .catch(error => console.error("Error loading responses:", error));
 }
 
-// Function to filter responses in real-time
+// ✅ Filter Responses in Real-Time
 function filterResponses() {
     const input = document.getElementById("search-bar").value.toLowerCase();
     const rows = document.querySelectorAll("#responses-list div"); // Target response elements
@@ -47,21 +47,29 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("search-bar").addEventListener("input", filterResponses);
 });
 
-// Edit a response
-function editResponse(keyword, oldResponse, oldLink) {
+
+// ✅ Ensure Search Works
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("search-bar").addEventListener("input", filterResponses);
+});
+
+// ✅ Edit a Response
+function editResponse(oldKeyword, oldResponse, oldLink) {
+    const newKeyword = prompt("Edit keyword:", oldKeyword);
     const newResponse = prompt("Edit response:", oldResponse);
     const newLink = prompt("Edit link (optional):", oldLink);
 
-    if (newResponse !== null) {
+    if (newKeyword !== null && newResponse !== null) {
         fetch("/edit_response", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ keyword, response: newResponse, link: newLink })
+            body: JSON.stringify({ oldKeyword, newKeyword, response: newResponse, link: newLink })
         }).then(() => loadResponses(currentPage));
     }
 }
 
-// Delete a response
+
+// ✅ Delete a Response
 function deleteResponse(keyword) {
     if (confirm("Are you sure you want to delete this response?")) {
         fetch("/delete_response", {
@@ -72,7 +80,7 @@ function deleteResponse(keyword) {
     }
 }
 
-// Function to update pagination buttons
+// ✅ Pagination Controls
 function updatePagination(totalResponses, perPage) {
     const paginationDiv = document.getElementById("pagination-controls");
     paginationDiv.innerHTML = ""; 
@@ -93,8 +101,42 @@ function updatePagination(totalResponses, perPage) {
     }
 }
 
+// ✅ Add a New Response
+document.getElementById("add-response-form").addEventListener("submit", function(event) {
+    event.preventDefault();  // Stop page reload
 
-// Load responses on page load
+    const keyword = document.getElementById("keyword").value.trim();
+    const response = document.getElementById("response").value.trim();
+    const link = document.getElementById("link").value.trim() || null;
+
+    if (!keyword || !response) {
+        alert("⚠️ Keyword and Response are required!");
+        return;
+    }
+
+    fetch("/add_response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, response, link })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ Response added successfully!");
+            loadResponses(currentPage);
+        } else {
+            alert("⚠️ Error: " + data.error);
+        }
+    })
+    .catch(error => console.error("Error:", error));
+
+    // Clear form fields after submission
+    document.getElementById("keyword").value = "";
+    document.getElementById("response").value = "";
+    document.getElementById("link").value = "";
+});
+
+//  Load Responses on Page Load
 window.onload = () => {
     loadResponses();
 };
